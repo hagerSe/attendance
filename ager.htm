@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"], input[type="email"], input[type="date"], input[type="time"], input[type="file"], textarea {
+            width: 100%; /* Full width */
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        img {
+            width: 50px; /* Set a small width for images */
+            height: auto;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Attendance Management System</h1>
+
+        <h2>Office Details</h2>
+        <label for="officeName">Office Name:</label>
+        <input type="text" id="officeName" placeholder="Enter office name">
+
+        <h2>Add Employee</h2>
+        <label for="employeeName">Employee Name:</label>
+        <input type="text" id="employeeName" placeholder="Enter employee name">
+        <label for="employeeAddress">Address:</label>
+        <input type="text" id="employeeAddress" placeholder="Enter employee address">
+        <label for="employeePhone">Phone Number:</label>
+        <input type="text" id="employeePhone" placeholder="Enter phone number">
+        <label for="employeeEmail">Email:</label>
+        <input type="email" id="employeeEmail" placeholder="Enter email">
+        <label for="employeePhoto">Upload Photo:</label>
+        <input type="file" id="employeePhoto" accept="image/*">
+        <label for="changeReason">Reason for Change (if updating):</label>
+        <textarea id="changeReason" placeholder="Enter reason for changes..."></textarea>
+
+        <h2>Record Attendance</h2>
+        <label for="occurrenceDay">Occurrence Day:</label>
+        <input type="date" id="occurrenceDay">
+        <label for="occurrenceTime">Occurrence Time:</label>
+        <input type="time" id="occurrenceTime">
+        <label for="notOccurrenceDay">Not Occurrence Day:</label>
+        <input type="date" id="notOccurrenceDay">
+        <label for="notOccurrenceTime">Not Occurrence Time:</label>
+        <input type="time" id="notOccurrenceTime">
+        <button onclick="addAttendance()">Add Attendance</button>
+
+        <h2>Attendance Summary</h2>
+        <button onclick="displayAttendance()">Show Attendance</button>
+        <table id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>Address</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                    <th>Photo</th>
+                    <th>Occurrence Day</th>
+                    <th>Occurrence Time</th>
+                    <th>Not Occurrence Day</th>
+                    <th>Not Occurrence Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const employees = [];
+
+        function addAttendance() {
+            const name = document.getElementById('employeeName').value.trim();
+            const address = document.getElementById('employeeAddress').value.trim();
+            const phone = document.getElementById('employeePhone').value.trim();
+            const email = document.getElementById('employeeEmail').value.trim();
+            const occurrenceDay = document.getElementById('occurrenceDay').value;
+            const occurrenceTime = document.getElementById('occurrenceTime').value;
+            const notOccurrenceDay = document.getElementById('notOccurrenceDay').value;
+            const notOccurrenceTime = document.getElementById('notOccurrenceTime').value;
+            const photoInput = document.getElementById('employeePhoto');
+            const photo = photoInput.files[0] ? URL.createObjectURL(photoInput.files[0]) : '';
+            const changeReason = document.getElementById('changeReason').value.trim();
+
+            // Validate required fields
+            if (!name || !address || !phone || !email || !occurrenceDay || !occurrenceTime) {
+                alert("Please fill all required fields.");
+                return;
+            }
+
+            // Check if the employee already exists
+            let employee = employees.find(emp => emp.name === name);
+            if (employee) {
+                if (changeReason === '') {
+                    alert("Please provide a reason for changing the details.");
+                    return;
+                }
+                // Update existing employee information
+                employee.address = address;
+                employee.phone = phone;
+                employee.email = email;
+                employee.photo = photo;
+            } else {
+                // Create new employee
+                employee = { name, address, phone, email, photo, attendance: [] };
+                employees.push(employee);
+            }
+
+            // Record attendance
+            const limitTime = new Date();
+            limitTime.setHours(10, 0, 0); // Set limit time to 10:00 AM
+            const attendanceDateTime = new Date(`${occurrenceDay}T${occurrenceTime}`);
+            const status = attendanceDateTime > limitTime ? "Absent" : "Present";
+
+            employee.attendance.push({
+                occurrenceDay,
+                occurrenceTime,
+                notOccurrenceDay,
+                notOccurrenceTime,
+                status
+            });
+
+            // Clear input fields
+            clearFields();
+        }
+
+        function clearFields() {
+            document.getElementById('employeeName').value = '';
+            document.getElementById('employeeAddress').value = '';
+            document.getElementById('employeePhone').value = '';
+            document.getElementById('employeeEmail').value = '';
+            document.getElementById('occurrenceDay').value = '';
+            document.getElementById('occurrenceTime').value = '';
+            document.getElementById('notOccurrenceDay').value = '';
+            document.getElementById('notOccurrenceTime').value = '';
+            document.getElementById('changeReason').value = '';
+            document.getElementById('employeePhoto').value = '';
+        }
+
+        function displayAttendance() {
+            const tbody = document.getElementById('attendanceTable').querySelector('tbody');
+            tbody.innerHTML = ''; // Clear previous results
+
+            employees.forEach(employee => {
+                employee.attendance.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${employee.name}</td>
+                        <td>${employee.address}</td>
+                        <td>${employee.phone}</td>
+                        <td>${employee.email}</td>
+                        <td><img src="${employee.photo}" alt="Photo"></td>
+                        <td>${record.occurrenceDay || ''}</td>
+                        <td>${record.occurrenceTime || ''}</td>
+                        <td>${record.notOccurrenceDay || ''}</td>
+                        <td>${record.notOccurrenceTime || ''}</td>
+                        <td>${record.status}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
